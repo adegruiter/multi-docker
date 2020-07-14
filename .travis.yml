@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t adegruiter/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run adegruiter/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t adegruiter/multi-client ./client
+    - docker build -t adegruiter/multi-nginx ./nginx
+    - docker build -t adegruiter/multi-server ./server
+    - docker build -t adegruiter/multi-worker ./worker
+    # Log in to the Docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password_stdin
+    # Take those images and push them to Docker Hub
+    - docker push adegruiter/multi-client
+    - docker push adegruiter/multi-nginx
+    - docker push adegruiter/multi-server
+    - docker push adegruiter/multi-worker
